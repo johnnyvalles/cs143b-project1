@@ -7,12 +7,14 @@ enum ProcessState { READY, RUNNING, BLOCKED }
 public class PCB {
     public ProcessState state;
     public int parent;
+    public int priority;
     public LinkedList<Integer> children;
     public LinkedList<Integer> resources;
 
-    public PCB(ProcessState state, int parent) {
+    public PCB(ProcessState state, int parent, int priority) {
         this.state = state;
         this.parent = parent;
+        this.priority = priority;
         this.children = new LinkedList<Integer>();
         this.resources = new LinkedList<Integer>();
     }
