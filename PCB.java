@@ -9,63 +9,22 @@ public class PCB {
     public int parent;
     public int priority;
     public LinkedList<Integer> children;
-    public LinkedList<Integer> resources;
+    public LinkedList<Pair> resources;
 
     public PCB(ProcessState state, int parent, int priority) {
         this.state = state;
         this.parent = parent;
         this.priority = priority;
         this.children = new LinkedList<Integer>();
-        this.resources = new LinkedList<Integer>();
-    }
-
-    @Override
-    public String toString() {
-        String state = "STATE: " + this.state;
-        String parent = "PARENT: " + this.parent;
-        String childrenStr = "CHILDREN: ";
-        String resourcesStr = "RESOURCES: ";
-        ListIterator<Integer> iter = this.children.listIterator();
-
-        while (iter.hasNext()) {
-            childrenStr += iter.next() + " ";
-        }
-
-        iter = this.resources.listIterator();
-        while (iter.hasNext()) {
-            resourcesStr += iter.next() + " ";
-        }
-
-        return state + "\n" + parent + "\n" + childrenStr + "\n" + resourcesStr + "\n";
-    }
-
-    public void addChild(int id) {
-        this.children.add(id);
+        this.resources = new LinkedList<Pair>();
     }
 
     public void removeChild(int id) {
-        int index = this.children.indexOf(id);
-
-        if (index < 0) {
-            System.out.println("No such child process exists.");
-        } else {
-            this.children.remove(index);
+        if (children.contains(id)) {
+            children.remove(id);
             System.out.println("Child process " + id + " removed.");
-        }
-    }
-
-    public void addResource(int id) {
-        this.children.add(id);
-    }
-
-    public void removeResource(int id) {
-        int index = this.resources.indexOf(id);
-
-        if (index < 0) {
-            System.out.println("No such resource held by process.");
         } else {
-            this.resources.remove(index);
-            System.out.println("Resource " + id + " removed.");
+            System.out.println("No such child process exists.");
         }
     }
 }
