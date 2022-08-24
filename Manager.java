@@ -217,20 +217,12 @@ public class Manager {
             String[] tokens = command.split("\\s+");
 
             if (tokens.length > 0) {
-                
-                
                 if (tokens[0].equals("in")) {
                     init();
                     System.out.print(getRunningProcessIndex() + " ");
-                
-                
-                
                 } else if (tokens[0].equals("to")) {
                     timeout();
                     System.out.print(getRunningProcessIndex() + " ");
-                
-                
-                
                 } else if (tokens[0].equals("cr")) {
                     if (tokens.length != 2) {
                         System.out.print("-1 ");
@@ -246,12 +238,8 @@ public class Manager {
                             System.out.print("-1 ");
                         }
                     }
-                
-                
-                } else if (tokens[0].equals("debug")) {
+                } else if (tokens[0].equals("ls")) {
                     System.out.println(this);
-                
-                
                 } else if (tokens[0].equals("rq")) {
                     if (tokens.length != 3) {
                         System.out.print("-1 ");
@@ -272,9 +260,6 @@ public class Manager {
                             System.out.print("-1 ");
                         }
                     }
-                
-                
-                
                 } else if (tokens[0].equals("rq")) {
                     if (tokens.length != 3) {
                         System.out.print("-1 ");
@@ -314,8 +299,6 @@ public class Manager {
                             System.out.print("-1 ");
                         }
                     }
-                
-                
                 } else if (tokens[0].equals("de")) {
                     if (tokens.length != 2) {
                         System.out.print("-1 ");
@@ -332,9 +315,6 @@ public class Manager {
                             System.out.print("-1 ");
                         }
                     }
-                
-                
-                
                 } else {
                     System.out.println("Unknown Command!");
                 }
