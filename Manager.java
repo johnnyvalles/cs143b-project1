@@ -456,25 +456,23 @@ public class Manager {
 
     @Override
     public String toString() {        
-        String rep = "\n---------------------------------------------------------\n";
-        rep += "Ready Lists\n";
+        String rep = "\n----------------------------------------------------------------------\n";
+        rep += "READY LISTS\n";
         for (int i = 2; i >= 0; --i) {
             rep += "\tPRIORITY " + i + ": ";
-
             ListIterator<Integer> iterator = readyList[i].listIterator();
-
             while (iterator.hasNext()) {
                 rep += iterator.next() + " ";
             }
             rep += "\n";
         }
-        rep += "---------------------------------------------------------\n";
-        rep += "PCB Array\n";
+        rep += "----------------------------------------------------------------------\n";
+        rep += "PCB ARRAY --> (index, priority, state, parent, children, resources)\n";
         for (int i = 0; i < MAX_PCB; ++i) {
             rep += i + "\t";
             
             if (pcb[i] == null) {
-                rep += "NO PROCESS\n";
+                rep += "FREE\n";
             } else {
                 rep += pcb[i].priority + "\t";
                 rep += pcb[i].state + "\t";
@@ -494,10 +492,11 @@ public class Manager {
                 rep += "]\n";
             }
         }
-        rep += "---------------------------------------------------------\n";
-        rep += "RCB Array\n";
+        rep += "----------------------------------------------------------------------\n";
+        rep += "RCB ARRAY --> (index, inventory, state, waitlist)\n";
         for (int i = 0; i < MAX_RCB; ++i) {
             rep += i + "\t";
+            rep += rcb[i].inventory + "\t";
             rep += rcb[i].state + "\t[";
             ListIterator<Pair> iter = rcb[i].waitlist.listIterator();
             while (iter.hasNext()) {
@@ -506,7 +505,7 @@ public class Manager {
             }
             rep += "]\n";
         }
-        rep += "---------------------------------------------------------\n";
+        rep += "----------------------------------------------------------------------\n";
         
         return rep;
     }
