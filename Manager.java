@@ -10,12 +10,13 @@ public class Manager {
     private PCB[] pcb = null;
     private RCB[] rcb = null;
     private LinkedList<Integer>[] readyList;
-    private int numDestroyed = 0;
+    private int numDestroyed;
 
     public Manager() {
+        init();
     }
 
-    public void init() {
+    private void init() {
         // create PCB array, all entries initially null
         pcb = new PCB[MAX_PCB];
         // create RCB array, all entries initially null
@@ -35,58 +36,34 @@ public class Manager {
         // create init process, RUNNING, NOPARENT
         pcb[0] = new PCB(ProcessState.RUNNING, -1, 0);
 
+        // reset number of destroyed processes
+        numDestroyed = 0;
+
         // add init process to ready list
         readyList[0].add(0);
-        System.out.print("0 ");
     }
 
-    public void create(int p) {
-        if (!isValidPriority(p)) {
-            // System.err.println("Error: cannot create process with priority " + p);
-            System.err.print("-1 ");
+    private boolean create(int p) {
+        // error checking
+        if (!canCreate(p)) {
+            return false;
         } else {
-            // index of a free PCB
+            // find free PCB index
             int childIndex = getFreePCBIndex();
-            if (childIndex == -1) {
-                // System.err.println("Error: PCB array is full.");
-                System.err.print("-1 ");
-            } else {
-                int parentIndex = getRunningProcessIndex();
-                pcb[childIndex] = new PCB(ProcessState.READY, parentIndex, p);
-                pcb[parentIndex].children.add(childIndex);
-                readyList[p].add(childIndex);
-                // System.out.println("* process " + childIndex + " created");      
+            int parentIndex = getRunningProcessIndex();
+            pcb[childIndex] = new PCB(ProcessState.READY, parentIndex, p);
+            pcb[parentIndex].children.add(childIndex);
+            readyList[p].add(childIndex);
 
-                if (pcb[childIndex].priority > pcb[parentIndex].priority) {
-                    scheduler();
-                } else {
-                    // System.out.print(parentIndex + " ");
-                }
+            if (pcb[childIndex].priority > pcb[parentIndex].priority) {
+                scheduler();
             }
-        }
-    }
 
-    public boolean canDestroy(int index) {
-        int currentIndex = readyList[getNonEmptyHighPriorityListIndex()].getFirst();
-
-        if (currentIndex == index) {
-            return true;
-        }
-
-        if (pcb[index] == null) {
-            // System.out.println("Error: cannot destroy non-existent process.");
-            System.out.print("-1 ");
-            return false;
-        } else if (pcb[index].parent != currentIndex) {
-            // System.out.println("Cannot destroy process that is not child of current running process.");
-            System.err.print("-1 ");
-            return false;
-        } else {
             return true;
         }
     }
 
-    public void destroy(int j) {
+    private void destroy(int j) {
         // create copy of j's children, source modified recursively
         LinkedList<Integer> children = new LinkedList<Integer>();
         for (int k : pcb[j].children) {
@@ -132,10 +109,9 @@ public class Manager {
         scheduler();
     }
 
-    public void request(int i, int r, int k) {
+    private void request(int i, int r, int k) {
         if (rcb[r].state >= k && rcb[r].waitlist.isEmpty()) {
             rcb[r].state -= k;
-
             // keep running count in single pair instance
             // first see if process already holds some units of resource r
             int pairIndex = -1;
@@ -162,7 +138,11 @@ public class Manager {
         }
     }
 
-    public void release(int i, int r, int k) {
+    private boolean release(int i, int r, int k) {
+
+        if (!canRelease(i, r, k)) {
+            return false;
+        }
         // see if process already holds some units of resource r
         int pairIndex = -1;
         for (int index = 0; index < pcb[i].resources.size(); ++index) {
@@ -176,14 +156,12 @@ public class Manager {
             // process i already holds units of resource r and wants to release some
             if (pcb[i].resources.get(pairIndex).second < k) {
                 // System.err.println("Error: attempting to release more units that what are actually held.");
-                System.out.print("-1 ");
+                return false;
             } else {
                 pcb[i].resources.get(pairIndex).second -= k;
-
                 if (pcb[i].resources.get(pairIndex).second == 0) {
                     pcb[i].resources.remove(pairIndex);
                 }
-
                 rcb[r].state += k;
                 while (!rcb[r].waitlist.isEmpty() && rcb[r].state > 0) {
                     Pair next = rcb[r].waitlist.get(0);
@@ -198,23 +176,23 @@ public class Manager {
                     }
                 }
                 scheduler();
+                return true;
             }
         } else {
             // process i does not hold any units of resource r
             // System.err.println("Error: cannot release a resource that is not held by this process.");
-            System.err.print("-1 ");
-            return;
+            return false;
         }
     }
 
-    public void timeout() {
+    private void timeout() {
         int listIndex = getNonEmptyHighPriorityListIndex();
         pcb[readyList[listIndex].getFirst()].state = ProcessState.READY;
         readyList[listIndex].add(readyList[listIndex].removeFirst());
         scheduler();
     }
 
-    public void scheduler() {
+    private void scheduler() {
         int listIndex = getNonEmptyHighPriorityListIndex();
         int currentRunningProcess = getRunningProcessIndex();
 
@@ -227,10 +205,7 @@ public class Manager {
 
         int j = readyList[listIndex].getFirst();
         pcb[j].state = ProcessState.RUNNING;
-        // System.out.println("* process " + j + " running");
-        System.out.print(j + " ");
     }
-
 
     public void shell() {
         Scanner in = new Scanner(System.in);
@@ -242,160 +217,141 @@ public class Manager {
             String[] tokens = command.split("\\s+");
 
             if (tokens.length > 0) {
-                if (tokens[0].equals("cr")) {
+                
+                
+                if (tokens[0].equals("in")) {
+                    init();
+                    System.out.print(getRunningProcessIndex() + " ");
+                
+                
+                
+                } else if (tokens[0].equals("to")) {
+                    timeout();
+                    System.out.print(getRunningProcessIndex() + " ");
+                
+                
+                
+                } else if (tokens[0].equals("cr")) {
                     if (tokens.length != 2) {
-                        System.err.println("-1 ");
+                        System.out.print("-1 ");
                     } else {
                         try {
                             int priority = Integer.parseInt(tokens[1]);
-                            create(priority);
-                        } catch (NumberFormatException ex) {
-                            System.err.println("-1 ");
-                        }
-                    }
-                } else if (tokens[0].equals("de")) {
-                    if (tokens.length != 2) {
-                        System.out.println("-1 ");
-                    } else {
-                        try {
-                            int index = Integer.parseInt(tokens[1]);
-                            if (canDestroy(index)) {
-                                numDestroyed = 0;
-                                destroy(index);
+                            if (create(priority)) {
+                                System.out.print(getRunningProcessIndex() + " ");
+                            } else {
+                                System.out.print("-1 ");
                             }
                         } catch (NumberFormatException ex) {
-                            System.out.println("-1 ");
+                            System.out.print("-1 ");
                         }
                     }
-                } else if (tokens[0].equals("rq")) {
-                    if (tokens.length != 3) {
-                        System.out.println("-1 ");
-                    } else {
-                        try {
-                            int i = getRunningProcessIndex();
-                            int r = Integer.parseInt(tokens[1]);
-                            int k = Integer.parseInt(tokens[2]);
-                            request(i, r, k);
-    
-                        } catch (NumberFormatException ex) {
-                            System.out.println("-1 ");
-                        }
-                    }
-                } else if (tokens[0].equals("rl")) {
-                    if (tokens.length != 3) {
-                        System.out.println("-1 ");
-                    } else {
-                        try {
-                            int i = getRunningProcessIndex();
-                            int r = Integer.parseInt(tokens[1]);
-                            int k = Integer.parseInt(tokens[2]);
-                            release(i, r, k);
-    
-                        } catch (NumberFormatException ex) {
-                            System.out.println("-1 ");
-                        }
-                    }
-                } else if (tokens[0].equals("to")) {
-                    timeout();
-                } else if (tokens[0].equals("in")) {
-                    init();
+                
+                
                 } else if (tokens[0].equals("debug")) {
                     System.out.println(this);
+                
+                
+                } else if (tokens[0].equals("rq")) {
+                    if (tokens.length != 3) {
+                        System.out.print("-1 ");
+                    } else {
+                        try {
+                            int i = getRunningProcessIndex();
+                            int r = Integer.parseInt(tokens[1]);
+                            int k = Integer.parseInt(tokens[2]);
+
+                            if (canRequest(i, r, k)) {
+                                request(i, r, k);
+                                System.out.print(getRunningProcessIndex() + " ");
+                            } else {
+                                System.out.print("-1 ");
+                            }
+                            
+                        } catch (NumberFormatException ex) {
+                            System.out.print("-1 ");
+                        }
+                    }
+                
+                
+                
+                } else if (tokens[0].equals("rq")) {
+                    if (tokens.length != 3) {
+                        System.out.print("-1 ");
+                    } else {
+                        try {
+                            int i = getRunningProcessIndex();
+                            int r = Integer.parseInt(tokens[1]);
+                            int k = Integer.parseInt(tokens[2]);
+                            
+                            if (canRequest(i, r, k)) {
+                                request(i, r, k);
+                                System.out.print(getRunningProcessIndex() + " ");
+                            } else {
+                                System.out.print("-1 ");
+                            }
+
+                        } catch (NumberFormatException ex) {
+                            System.out.print("-1 ");
+                        }
+                    }
+                
+                } else if (tokens[0].equals("rl")) {
+                    if (tokens.length != 3) {
+                        System.out.print("-1 ");
+                    } else {
+                        try {
+                            int i = getRunningProcessIndex();
+                            int r = Integer.parseInt(tokens[1]);
+                            int k = Integer.parseInt(tokens[2]);
+
+                            if (release(i, r, k)) {
+                                System.out.print(getRunningProcessIndex() + " ");
+                            } else {
+                                System.out.print("-1 ");
+                            }
+                        } catch (NumberFormatException ex) {
+                            System.out.print("-1 ");
+                        }
+                    }
+                
+                
+                } else if (tokens[0].equals("de")) {
+                    if (tokens.length != 2) {
+                        System.out.print("-1 ");
+                    } else {
+                        try {
+                            int i = Integer.parseInt(tokens[1]);
+                            if (canDestroy(i)) {
+                                destroy(i);
+                                System.out.print(getRunningProcessIndex() + " ");
+                            } else {
+                                System.out.print("-1 ");
+                            }
+                        } catch (NumberFormatException ex) {
+                            System.out.print("-1 ");
+                        }
+                    }
+                
+                
+                
                 } else {
-                    System.out.println("-1 ");
-                }   
+                    System.out.println("Unknown Command!");
+                }
             }
         } while (in.hasNext());
-
         in.close();
     }
 
-    public void debug_shell() {
-        Scanner in = new Scanner(System.in);
-        String command = "";
-        
-        do {
-            System.out.print("> ");
-            command = in.nextLine();
-            command = command.replaceAll("\\,+", " ");
-            String[] tokens = command.split("\\s+");
-
-            if (tokens.length > 0) {
-                if (tokens[0].equals("cr")) {
-                    // System.out.println("create() invoked.");
-                    if (tokens.length != 2) {
-                        System.err.println("Invalid use of command: cr <p>");
-                    } else {
-                        try {
-                            int priority = Integer.parseInt(tokens[1]);
-                            create(priority);
-                        } catch (NumberFormatException ex) {
-                            System.err.println("Invalid use of command: cr <p>");
-                        }
-                    }
-                } else if (tokens[0].equals("de")) {
-                    if (tokens.length != 2) {
-                        System.out.println("Invalid use of command: de <i>");
-                    } else {
-                        try {
-                            int index = Integer.parseInt(tokens[1]);
-                            // System.out.println("destroy(" + index + ") invoked.");
-                            if (canDestroy(index)) {
-                                numDestroyed = 0;
-                                destroy(index);
-                                System.out.println(numDestroyed + " processes destroyed");
-                            }
-                        } catch (NumberFormatException ex) {
-                            System.out.println("Invalid use of command: de <i>");
-                        }
-                    }
-                } else if (tokens[0].equals("rq")) {
-                    if (tokens.length != 3) {
-                        System.out.println("Invalid use of command: rq <r> <k>");
-                    } else {
-                        try {
-                            int i = getRunningProcessIndex();
-                            int r = Integer.parseInt(tokens[1]);
-                            int k = Integer.parseInt(tokens[2]);
-                            request(i, r, k);
-    
-                        } catch (NumberFormatException ex) {
-                            System.out.println("Invalid use of command: rq <r>");
-                        }
-                    }
-                } else if (tokens[0].equals("rl")) {
-                    if (tokens.length != 3) {
-                        System.out.println("Invalid use of command: rl <r> <k>");
-                    } else {
-                        try {
-                            int i = getRunningProcessIndex();
-                            int r = Integer.parseInt(tokens[1]);
-                            int k = Integer.parseInt(tokens[2]);
-                            // System.out.println("release(" + index + ") invoked.");
-                            release(i, r, k);
-    
-                        } catch (NumberFormatException ex) {
-                            System.out.println("Invalid use of command: rl <r>");
-                        }
-                    }
-                } else if (tokens[0].equals("to")) {
-                    // // System.out.println("timeout() invoked.");
-                    timeout();
-                } else if (tokens[0].equals("in")) {
-                    // // System.out.println("init() invoked.");
-                    init();
-                } else if (tokens[0].equals("debug")) {
-                    System.out.println(this);
-                } else {
-                    System.out.println("Unknown command provided.");
-                }   
-            }
-        } while (in.hasNext() && !command.equals("quit"));
-
-        in.close();
+    // helper methods
+    private boolean isValidPriority(int p) {
+        return p > 0 && p < 3;
     }
 
-    // Helper Methods
+    private boolean isValidResource(int r) {
+        return r >= 0 && r < MAX_RCB;
+    }
+
     private int getFreePCBIndex() {
         for (int i = 0; i < MAX_PCB; ++i) {
             if (pcb[i] == null) {
@@ -405,15 +361,11 @@ public class Manager {
         return -1;
     }
 
-    private boolean isValidPriority(int p) {
-        return p > 0 && p < 3;
-    }
-
-    public int getNonEmptyHighPriorityListIndex() {
+    private int getNonEmptyHighPriorityListIndex() {
         return readyList[2].isEmpty() ? (readyList[1].isEmpty() ? 0 : 1) : 2;
     }
 
-    public int getRunningProcessIndex() {
+    private int getRunningProcessIndex() {
         if (!readyList[2].isEmpty() && pcb[readyList[2].getFirst()].state == ProcessState.RUNNING) {
             return readyList[2].getFirst();
         } else if (!readyList[1].isEmpty() && pcb[readyList[1].getFirst()].state == ProcessState.RUNNING) {
@@ -422,6 +374,83 @@ public class Manager {
             return readyList[0].getFirst();
         } else {
             return -1; // no process is currently running, need to schedule
+        }
+    }
+
+    private boolean canCreate(int p) {
+        return isValidPriority(p) && getFreePCBIndex() != -1;
+    }
+
+    private boolean canDestroy(int index) {
+        int currentIndex = readyList[getNonEmptyHighPriorityListIndex()].getFirst();
+
+        // cannot destroy init process
+        if (index == 0) {
+            return false;
+        }
+
+        // cannot destroy non-existing process
+        if (pcb[index] == null) {
+            return false;
+        }
+
+        // process destroying itself
+        if (index == currentIndex) {
+            return true;
+        }
+        
+        if (pcb[index].parent != currentIndex) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    private boolean canRequest(int i, int r, int k) {
+        if (i == 0) {
+            // init process cannot request resources
+            return false;
+        }
+
+        if (!isValidResource(r)) {
+            // r is not a valid resource number
+            return false;
+        }
+
+        if (k > rcb[r].inventory) {
+            // requesting more units than exist
+            return false;
+        }
+
+        Pair resourcePair = pcb[i].getResourcePair(r);
+        int unitsHeld = (resourcePair == null ? 0 : resourcePair.second);
+
+        if (k + unitsHeld <= rcb[r].inventory) {
+            // process i can request k additional units of resource r
+            return true;
+        } else {
+            // process i cannot request k additional units of resource r
+            return false;
+        }
+    }
+
+    private boolean canRelease(int i, int r, int k) {
+        if (i == 0) {
+            // init process cannot request/release resources
+            return false;
+        } else if (!isValidResource(r)) {
+            // resource r does not exist
+            return false;
+        } else {
+            // determine if process i holds units of resource r
+            Pair resourcePair = pcb[i].getResourcePair(r);
+            int unitsHeld = (resourcePair == null ? 0 : resourcePair.second);
+
+            if (unitsHeld > 0 && k <= resourcePair.second) {
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 

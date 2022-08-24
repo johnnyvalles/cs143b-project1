@@ -27,4 +27,32 @@ public class PCB {
             System.out.println("No such child process exists.");
         }
     }
+
+    public boolean canReleaseResource(int r) {
+        ListIterator<Pair> iter = resources.listIterator();
+
+        while (iter.hasNext()) {
+            if (iter.next().first == r) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public Pair getResourcePair(int r) {
+        ListIterator<Pair> iterator = resources.listIterator();
+       
+        while (iterator.hasNext()) {
+            Pair pair = iterator.next();
+
+            if (pair.first == r) {
+                // return resource pair reference
+                return pair;
+            }
+        }
+
+        return null;
+    }
+
 }

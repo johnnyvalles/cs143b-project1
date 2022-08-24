@@ -12,7 +12,6 @@ public class RCB {
         waitlist = new LinkedList<Pair>();
     }
 
-
     public boolean removeProcFromWaitList(int proc) {
         int index = -1;
 
