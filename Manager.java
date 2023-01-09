@@ -362,6 +362,7 @@ public class Manager {
     }
 
     private boolean canDestroy(int index) {
+        // process index from head of highest-priority non-empty ready list
         int currentIndex = readyList[getNonEmptyHighPriorityListIndex()].getFirst();
 
         // cannot destroy init process
@@ -374,12 +375,8 @@ public class Manager {
             return false;
         }
 
-        // process destroying itself
-        if (index == currentIndex) {
-            return true;
-        }
-        
-        if (pcb[index].parent != currentIndex) {
+        // not self or descendent
+        if (!isDescendent(index, currentIndex)) {
             return false;
         }
         
@@ -433,6 +430,21 @@ public class Manager {
             }
         }
     }
+
+    // determines if x is a descendent of i (i.e., self, child, grand, etc).
+    private boolean isDescendent(int x, int i) {
+        if (x == i) {
+            return true;
+        }
+
+        for (int j : pcb[i].children) {
+            if (isDescendent(x, j)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     @Override
     public String toString() {        
