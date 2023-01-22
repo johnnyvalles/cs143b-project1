@@ -219,6 +219,7 @@ public class Manager {
             if (tokens.length > 0) {
                 if (tokens[0].equals("in")) {
                     init();
+                    System.out.println();
                     System.out.print(getRunningProcessIndex() + " ");
                 } else if (tokens[0].equals("to")) {
                     timeout();
@@ -316,7 +317,9 @@ public class Manager {
                         }
                     }
                 } else {
-                    System.out.println("Unknown Command!");
+                    // COMMENTED OUT FOR TESTING PURPOSES
+                    // System.out.println("Unknown Command!");
+                    continue;
                 }
             }
         } while (in.hasNext());
