@@ -1,4 +1,5 @@
 import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.ListIterator;
 import java.util.Scanner;
 
@@ -8,7 +9,7 @@ public class Manager {
     
     private PCB[] pcb = null;
     private RCB[] rcb = null;
-    private LinkedList<Integer>[] readyList;
+    private ArrayList<LinkedList<Integer>> readyList;
     private int numDestroyed;
 
     public Manager() {
@@ -22,10 +23,10 @@ public class Manager {
         rcb = new RCB[MAX_RCB];
         
         // create empty ready lists, no processes yet
-        readyList = new LinkedList[3];
-        readyList[0] = new LinkedList<Integer>();
-        readyList[1] = new LinkedList<Integer>();
-        readyList[2] = new LinkedList<Integer>();
+        readyList = new ArrayList<LinkedList<Integer>>();
+        readyList.add(0, new LinkedList<Integer>());
+        readyList.add(1, new LinkedList<Integer>());
+        readyList.add(2, new LinkedList<Integer>());
         
         rcb[0] = new RCB(1);
         rcb[1] = new RCB(1);
@@ -39,7 +40,7 @@ public class Manager {
         numDestroyed = 0;
 
         // add init process to ready list
-        readyList[0].add(0);
+        readyList.get(0).add(0);
     }
 
     private boolean create(int p) {
@@ -52,7 +53,7 @@ public class Manager {
             int parentIndex = getRunningProcessIndex();
             pcb[childIndex] = new PCB(ProcessState.READY, parentIndex, p);
             pcb[parentIndex].children.add(childIndex);
-            readyList[p].add(childIndex);
+            readyList.get(p).add(childIndex);
 
             if (pcb[childIndex].priority > pcb[parentIndex].priority) {
                 scheduler();
@@ -78,9 +79,9 @@ public class Manager {
         // check if process is on RL or is on a resource waitlist
         if (pcb[j].state != ProcessState.BLOCKED) {
             // j is in the ready list, need to remove it
-            readyList[0].removeFirstOccurrence((j));
-            readyList[1].removeFirstOccurrence((j));
-            readyList[2].removeFirstOccurrence((j));
+            readyList.get(0).removeFirstOccurrence((j));
+            readyList.get(1).removeFirstOccurrence((j));
+            readyList.get(2).removeFirstOccurrence((j));
             // pcb[readyList[getNonEmptyHighPriorityListIndex()].getFirst()].state = ProcessState.RUNNING;
         } else {
             // j is not in the ready list
@@ -131,7 +132,7 @@ public class Manager {
             }
         } else {
             pcb[i].state = ProcessState.BLOCKED;
-            readyList[getNonEmptyHighPriorityListIndex()].removeFirst();
+            readyList.get(getNonEmptyHighPriorityListIndex()).removeFirst();
             rcb[r].waitlist.add(new Pair(i, k));
             scheduler();
         }
@@ -169,7 +170,7 @@ public class Manager {
                         pcb[next.first].resources.add(new Pair(r, next.second));
                         pcb[next.first].state = ProcessState.READY;
                         rcb[r].waitlist.removeFirst();
-                        readyList[pcb[next.first].priority].add(next.first);
+                        readyList.get(pcb[next.first].priority).add(next.first);
                     } else {
                         break;
                     }
@@ -186,8 +187,8 @@ public class Manager {
 
     private void timeout() {
         int listIndex = getNonEmptyHighPriorityListIndex();
-        pcb[readyList[listIndex].getFirst()].state = ProcessState.READY;
-        readyList[listIndex].add(readyList[listIndex].removeFirst());
+        pcb[readyList.get(listIndex).getFirst()].state = ProcessState.READY;
+        readyList.get(listIndex).add(readyList.get(listIndex).removeFirst());
         scheduler();
     }
 
@@ -197,12 +198,12 @@ public class Manager {
 
         if (currentRunningProcess == -1) {
             // System.err.println("Error: no running process.");
-            pcb[readyList[listIndex].getFirst()].state = ProcessState.RUNNING;
+            pcb[readyList.get(listIndex).getFirst()].state = ProcessState.RUNNING;
         } else {
             pcb[currentRunningProcess].state = ProcessState.READY;
         }
 
-        int j = readyList[listIndex].getFirst();
+        int j = readyList.get(listIndex).getFirst();
         pcb[j].state = ProcessState.RUNNING;
     }
 
@@ -341,16 +342,16 @@ public class Manager {
     }
 
     private int getNonEmptyHighPriorityListIndex() {
-        return readyList[2].isEmpty() ? (readyList[1].isEmpty() ? 0 : 1) : 2;
+        return readyList.get(2).isEmpty() ? (readyList.get(1).isEmpty() ? 0 : 1) : 2;
     }
 
     private int getRunningProcessIndex() {
-        if (!readyList[2].isEmpty() && pcb[readyList[2].getFirst()].state == ProcessState.RUNNING) {
-            return readyList[2].getFirst();
-        } else if (!readyList[1].isEmpty() && pcb[readyList[1].getFirst()].state == ProcessState.RUNNING) {
-            return readyList[1].getFirst();
-        } else if (!readyList[0].isEmpty() && pcb[readyList[0].getFirst()].state == ProcessState.RUNNING) {
-            return readyList[0].getFirst();
+        if (!readyList.get(2).isEmpty() && pcb[readyList.get(2).getFirst()].state == ProcessState.RUNNING) {
+            return readyList.get(2).getFirst();
+        } else if (!readyList.get(1).isEmpty() && pcb[readyList.get(1).getFirst()].state == ProcessState.RUNNING) {
+            return readyList.get(1).getFirst();
+        } else if (!readyList.get(0).isEmpty() && pcb[readyList.get(0).getFirst()].state == ProcessState.RUNNING) {
+            return readyList.get(0).getFirst();
         } else {
             return -1; // no process is currently running, need to schedule
         }
@@ -362,7 +363,7 @@ public class Manager {
 
     private boolean canDestroy(int index) {
         // process index from head of highest-priority non-empty ready list
-        int currentIndex = readyList[getNonEmptyHighPriorityListIndex()].getFirst();
+        int currentIndex = readyList.get(getNonEmptyHighPriorityListIndex()).getFirst();
 
         // cannot destroy init process
         if (index == 0) {
@@ -451,7 +452,7 @@ public class Manager {
         rep += "READY LISTS\n";
         for (int i = 2; i >= 0; --i) {
             rep += "\tPRIORITY " + i + ": ";
-            ListIterator<Integer> iterator = readyList[i].listIterator();
+            ListIterator<Integer> iterator = readyList.get(i).listIterator();
             while (iterator.hasNext()) {
                 rep += iterator.next() + " ";
             }
