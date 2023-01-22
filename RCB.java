@@ -1,4 +1,3 @@
-package com.johnnyvalles.project1;
 import java.util.LinkedList;
 
 public class RCB {

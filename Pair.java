@@ -1,5 +1,3 @@
-package com.johnnyvalles.project1;
-
 public class Pair {
     public int first;
     public int second;
