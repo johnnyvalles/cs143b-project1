@@ -20,7 +20,10 @@ Resources represent physical or virtual components with limited availability in 
 
 # Building & Running the Manager
 Running the manager using the instructor provided input file:
-*  `javac *.java && java ManagerDriver < /path/to/input.txt > /path/to/output.txt`
-
+```sh
+javac *.java && java ManagerDriver < /path/to/input.txt > /path/to/output.txt
+```
 Running the manager and interacting with the presentation shell:
-* `javac *.java && java ManagerDriver`
+```sh
+javac *.java && java ManagerDriver
+```
