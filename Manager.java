@@ -10,7 +10,6 @@ public class Manager {
     private PCB[] pcb = null;
     private RCB[] rcb = null;
     private ArrayList<LinkedList<Integer>> readyList;
-    private int numDestroyed;
 
     public Manager() {
         init();
@@ -35,9 +34,6 @@ public class Manager {
 
         // create init process, RUNNING, NOPARENT
         pcb[0] = new PCB(ProcessState.RUNNING, -1, 0);
-
-        // reset number of destroyed processes
-        numDestroyed = 0;
 
         // add init process to ready list
         readyList.get(0).add(0);
@@ -105,7 +101,6 @@ public class Manager {
         }
 
         pcb[j] = null;
-        numDestroyed++;
         scheduler();
     }
 
